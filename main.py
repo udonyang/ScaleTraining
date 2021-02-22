@@ -6,9 +6,12 @@ import random
 
 def main():
     cps = int(sys.argv[1])
-    while True:
+    rnd = int(sys.argv[2])
+    for i in range(0, rnd):
         scale = ['C', 'bD', 'D', 'bE', 'E', 'F', 'bG', 'G', 'bA', 'A', 'bB', 'B']
-        print(random.choice(scale), '\r', end='')
-        time.sleep(60/cps)
+        random.shuffle(scale)
+        for note in scale:
+            print(i, ": ", note, '\r', end='')
+            time.sleep(60/cps)
 
 main()
