@@ -4,6 +4,7 @@ import sys
 import time
 import random
 import argparse
+import datetime
 
 kBase = ['C', 'bD', 'D', 'bE', 'E', 'F', 'bG', 'G', 'bA', 'A', 'bB', 'B']
 kInterval = [
@@ -50,6 +51,7 @@ def MotiveTrain(args):
 
 
 def main():
+    print(datetime.datetime.now().strftime('%Y%m%d'))
     p = argparse.ArgumentParser()
     p.add_argument('--cps', help='click per second', default=60, type=int);
     p.add_argument('--rnd', help='round', default=60, type=int);
