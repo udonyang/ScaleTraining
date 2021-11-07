@@ -7,6 +7,15 @@ import argparse
 import datetime
 
 kBase = ['C', 'bD', 'D', 'bE', 'E', 'F', 'bG', 'G', 'bA', 'A', 'bB', 'B']
+kScale = [
+        'Ionian'
+        , 'Dorian'
+        , 'Phrygian'
+        , 'Lydian'
+        , 'Mixolydian'
+        , 'Aeolian'
+        , 'Locrian'
+        ]
 kInterval = [
         ('union', 1, 0),
         ('m2', 2, 1),
@@ -39,19 +48,20 @@ def StringTrain(args):
     return 0
 
 def MotiveTrain(args):
+    ds = datetime.datetime.now().strftime('%Y%m%d')
     random.shuffle(kBase)
+    random.shuffle(kScale)
     interval = kInterval[0:args.interval]
     gaps = [x for x in range(1, 5)]
-    print(kBase[0])
+    motive = ''
     for r in range(0, args.len):
         random.shuffle(interval)
         random.shuffle(gaps)
-        print(interval[0][1], "1/%s"%(2**gaps[0]))
+        motive += str(interval[0][1])
+    print('%s,%s,%s,%s'%(ds, kBase[0], kScale[0], motive))
     return 0
 
-
 def main():
-    print(datetime.datetime.now().strftime('%Y%m%d'))
     p = argparse.ArgumentParser()
     p.add_argument('--cps', help='click per second', default=60, type=int);
     p.add_argument('--rnd', help='round', default=60, type=int);
