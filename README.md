@@ -28,8 +28,10 @@ python3 main.py --train string [--cps <bpm>] [--rnd <round, 12 note per round>]
 ## Harmonica
 
 ### improvise material
-find position for playing jazz standard
-- semitone less than 2, aka less blending or overblow
+Search position for playing jazz standard
+- triad semiton < 2
+- 7th chord < 3
+- scale semitone < 3
 
 ```bash
 # progress
