@@ -36,6 +36,7 @@ kBase = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 kSemi = set(['Db', 'Eb', 'Gb', 'Ab', 'Bb'])
 kScale = {}
 kScale['Major'] = [2, 2, 1, 2, 2, 2]
+kScale['HarmonicMinor'] = [2, 1, 2, 2, 1, 3]
 kScale['MelodicMinor'] = [2, 1, 2, 2, 2, 2]
 kScale['Augment'] = [2, 2, 2, 2, 2]
 kScale['DiminishH'] = [2, 1, 2, 1, 2, 1, 2]
@@ -132,7 +133,7 @@ def GetColor(scale):
     if feat  in attr:
         return attr[feat]
     # print('undefine color', feat, reg_scale)
-    return str(feat)
+    return str(feat).replace(',', ';')
 
 def BluesHarpScale():
     scales = {}
@@ -157,9 +158,9 @@ def BluesHarpScale():
         for note in seq:
             ind = seq.index(note)
             attr = GetColor(seq[ind:]+seq[:ind])
-            key_scales.append((pos, note, attr, nsemi, seq[0]+' '+scale_name, scale))
+            key_scales.append((pos, note, attr, nsemi, seq[0], scale_name, scale))
 
-    print(','.join(['pos', 'key', 'attr', 'hard', 'scale', 'sequence']))
+    print(','.join(['position', 'key', 'attr', 'hard', 'position_key', 'scale', 'sequence']))
     for key_scale in key_scales:
         print(','.join([str(x) for x in key_scale]))
 
