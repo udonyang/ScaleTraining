@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import sys
+from copy import deepcopy
 import time
 import random
 import argparse
@@ -145,33 +146,70 @@ kChordInfo = {
 
 kProgInfo = [
         {
+            'cat': '25',
             'seq': [('M2', 'm'), ('P5', 'ma')],
             },
         {
-            'seq': [('M2', 'dim'), ('P5', 'm')],
+            'cat': '73',
+            'seq': [('M7', 'dim'), ('M3', 'm')],
             },
         {
-            'seq': [('M2', 'm7'), ('P5', '7')],
+            'cat': '251',
+            'seq': [('M2', 'm'), ('P5', 'ma'), ('union', 'ma')],
             },
         {
-            'seq': [('union', 'ma7'), ('M6', 'm7'), ('M2', 'm7'), ('P5', '7')],
+            'cat': '736',
+            'seq': [('M7', 'dim'), ('M3', 'm'), ('M6', 'm')],
             },
         {
-            'seq': [('union', 'ma'), ('M6', 'm'), ('M2', 'm'), ('P5', 'ma')],
+            'cat': '2516',
+            'seq': [('M2', 'm'), ('P5', 'ma'), ('union', 'ma'), ('M6', 'm')],
             },
         {
-            'seq': [('M2', 'm7'), ('P5', '7')],
-            },
-        {
-            'seq': [('M2', 'm7'), ('P5', '7')],
-            },
-        {
-            'seq': [('union', 'ma7'), ('M6', 'm7')],
-            },
-        {
-            'seq': [('union', 'ma7'), ('P4', 'ma7')],
+            'cat': '62514',
+            'seq': [('M6', 'm'), ('M2', 'm'), ('P5', 'ma'), ('union', 'ma'), ('P4', 'ma')],
             },
         ]
+
+kSubInfo = [
+        {
+            'src': ('union', 'ma'),
+            'dst': [
+                ('M6', 'm'),
+                ('M3', 'm'),
+                ],
+            },
+        {
+            'src': ('M2', 'm'),
+            'dst': [
+                ('P4', 'ma'), 
+                ('M2', 'ma'),
+                ('m6', 'ma'),
+                ],
+            },
+        {
+            'src': ('M3', 'm'),
+            'dst': [
+                ('P5', 'ma'), 
+                ('M3', 'ma'), 
+                ],
+            },
+        {
+            'src': ('M2', 'ma'),
+            'dst': [
+                ('m6', 'ma'),
+                ],
+            },
+        {
+            'src': ('P5', 'ma'),
+            'dst': [
+                ('m2', 'ma'),
+                ('M3', 'm'),
+                ('M7', 'dim'),
+                ],
+            },
+        ]
+
 def GetProgName(proginfo):
     return ' '.join([kGapInfo[gap]['deg']+chord for gap, chord in proginfo['seq']])
 
@@ -189,8 +227,17 @@ kScale['Pentatonic'] = ['M2', 'M2', 'm3', 'M2']
 def ShiftNote(key, gap):
     return kBase[(kNoteInfo[key]['abs_pos']+kGapInfo[gap]['abs_gap'])%len(kBase)]
 
-def GetScaleSeq(scale):
+def GetGapSeq(scale):
     return [kGapInfo[gap]['abs_gap'] for gap in scale]
+
+def GetScaleSeq(key, gaps):
+    note = kNoteInfo[key]['abs_pos']
+    ret = []
+    scale = [kBase[note]]
+    for gap in GetGapSeq(gaps):
+        note = (note+gap )%len(kBase)
+        scale.append(kBase[note])
+    return scale
 
 def GetChordSeq(key, chordinfo):
     ret = [key]
@@ -302,13 +349,9 @@ def GetTupleCsv(t):
 
 def BluesHarpScale():
     scales = {}
-    for scale_name, intervals in kScale.items():
+    for scale_name, gaps in kScale.items():
         for key in range(0, len(kBase)):
-            note = key
-            scale = [kBase[note]]
-            for interval in GetScaleSeq(intervals):
-                note = (note+interval)%len(kBase)
-                scale.append(kBase[note])
+            scale = GetScaleSeq(kBase[key], gaps)
             nsemi = sum([x in kSemi for x in scale])
             if nsemi < 3:
                 scales[(scale_name, kNoteInfo[kBase[key]]['blues_harp_pos'], ' '.join(scale))] = nsemi
@@ -327,7 +370,7 @@ def BluesHarpScale():
 
     print(','.join(['position', 'key', 'attr', 'hard', 'position_key', 'scale', 'sequence']))
     for key_scale in key_scales:
-        print(GetTupleCsv(key_scales))
+        print(GetTupleCsv(key_scale))
 
 def BluesHarpChord():
     chord_seqs = set()
@@ -342,9 +385,27 @@ def BluesHarpChord():
         print(GetTupleCsv(chord_seq))
 
 def BluesHarpProg():
+    prog_infos = {}
+
+    # prog transform
+    for proginfo in kProgInfo:
+        prog_infos[GetProgName(proginfo)] = proginfo
+        for chord in proginfo['seq']:
+            for subinfo in kSubInfo:
+                if subinfo['src'] == chord:
+                    for dst in subinfo['dst']:
+                        new_proginfo = deepcopy(proginfo)
+                        new_proginfo['seq'][proginfo['seq'].index(chord)] = dst
+                        # print('match', subinfo, proginfo, '->', new_proginfo)
+                        prog_infos[GetProgName(new_proginfo)] = new_proginfo
+
+    key_scale = []
+    for key, keyinfo in kNoteInfo.items():
+        key_scale.append((key, 'Major', GetScaleSeq(key, kScale)))
+
     prog_seqs = set()
     for key, keyinfo in kNoteInfo.items():
-        for proginfo in kProgInfo:
+        for proginfo in prog_infos.values():
             seq = set()
             for gap, chord in proginfo['seq']:
                 root = ShiftNote(key, gap)
@@ -354,9 +415,9 @@ def BluesHarpProg():
                 seq = list(seq)
                 seq.sort(key=lambda x: kNoteInfo[x]['abs_pos'])
                 seq = seq[seq.index(key):]+seq[:seq.index(key)]
-                prog_seqs.add((key, GetProgName(proginfo), ' '.join(seq[1:])))
+                prog_seqs.add((key, proginfo['cat'], GetProgName(proginfo), ' '.join(seq[1:])))
 
-    print(','.join(['key', 'prog', 'seq']))
+    print(','.join(['key', 'cat', 'prog', 'seq']))
     for prog_seq in prog_seqs:
         print(GetTupleCsv(prog_seq))
 
