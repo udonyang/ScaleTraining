@@ -230,7 +230,8 @@ def ShiftNote(key, gap):
 def GetGapSeq(scale):
     return [kGapInfo[gap]['abs_gap'] for gap in scale]
 
-def GetScaleSeq(key, gaps):
+def GetScaleSeq(key, scale_name):
+    gaps = kScale[scale_name]
     note = kNoteInfo[key]['abs_pos']
     ret = []
     scale = [kBase[note]]
@@ -351,7 +352,7 @@ def BluesHarpScale():
     scales = {}
     for scale_name, gaps in kScale.items():
         for key in range(0, len(kBase)):
-            scale = GetScaleSeq(kBase[key], gaps)
+            scale = GetScaleSeq(kBase[key], scale_name)
             nsemi = sum([x in kSemi for x in scale])
             if nsemi < 3:
                 scales[(scale_name, kNoteInfo[kBase[key]]['blues_harp_pos'], ' '.join(scale))] = nsemi
@@ -384,11 +385,11 @@ def BluesHarpChord():
     for chord_seq in chord_seqs:
         print(GetTupleCsv(chord_seq))
 
-def BluesHarpProg():
+def ProgTrans(progs):
     prog_infos = {}
 
     # prog transform
-    for proginfo in kProgInfo:
+    for proginfo in progs:
         prog_infos[GetProgName(proginfo)] = proginfo
         for chord in proginfo['seq']:
             for subinfo in kSubInfo:
@@ -398,14 +399,24 @@ def BluesHarpProg():
                         new_proginfo['seq'][proginfo['seq'].index(chord)] = dst
                         # print('match', subinfo, proginfo, '->', new_proginfo)
                         prog_infos[GetProgName(new_proginfo)] = new_proginfo
+    return prog_infos.values()
 
-    key_scale = []
-    for key, keyinfo in kNoteInfo.items():
-        key_scale.append((key, 'Major', GetScaleSeq(key, kScale)))
+def BluesHarpProg():
+    prog_infos = kProgInfo
+    while True:
+        last_len = len(prog_infos)
+        prog_infos = ProgTrans(prog_infos)
+        if last_len == len(prog_infos):
+            break
+
+    key_scales = []
+    for scale_name in kScale.keys():
+        for key, keyinfo in kNoteInfo.items():
+            key_scales.append((key, scale_name, GetScaleSeq(key, scale_name)))
 
     prog_seqs = set()
     for key, keyinfo in kNoteInfo.items():
-        for proginfo in prog_infos.values():
+        for proginfo in prog_infos:
             seq = set()
             for gap, chord in proginfo['seq']:
                 root = ShiftNote(key, gap)
@@ -415,9 +426,12 @@ def BluesHarpProg():
                 seq = list(seq)
                 seq.sort(key=lambda x: kNoteInfo[x]['abs_pos'])
                 seq = seq[seq.index(key):]+seq[:seq.index(key)]
-                prog_seqs.add((key, proginfo['cat'], GetProgName(proginfo), ' '.join(seq[1:])))
+                for key_scale in key_scales:
+                    nsemi = GetNsemi(key_scale[2])
+                    if set(key_scale[2]).intersection(set(seq)) == set(seq) and nsemi < 3:
+                        prog_seqs.add((key, proginfo['cat'], GetProgName(proginfo), ' '.join(seq[1:]), key_scale[0], key_scale[1], nsemi))
 
-    print(','.join(['key', 'cat', 'prog', 'seq']))
+    print(','.join(['key', 'cat', 'prog', 'seq', 'position_key', 'scale', 'nsemi']))
     for prog_seq in prog_seqs:
         print(GetTupleCsv(prog_seq))
 
