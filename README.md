@@ -1,5 +1,18 @@
 # Usage
 
+## Define
+|column|desc
+|-|-
+|key|tonic key
+|scale|eg. major, melodic minor
+|prog|chord progression
+|attr|chord color or attribute, eg. ma7, m7, dim
+|seq|note sequence, represent chord/scale detail
+|cat|category
+|position|C bluesharp position
+|position\_key|C bluesharp position key
+|nsemi|semitone count, represent if it's easy for C bluesharp
+
 ## MusicTheory
 ```bash
 # random composing，random key x random mode x random sequence
