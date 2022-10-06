@@ -379,9 +379,9 @@ def BluesHarpChord():
         for chord, chordinfo in kChordInfo.items():
             seq = GetChordSeq(key, chordinfo)
             if GetNsemi(seq) < 3:
-                chord_seqs.add((key, chord, ' '.join(seq)))
+                chord_seqs.add((key, chord, ' '.join(seq), GetNsemi(seq)))
 
-    print(','.join(['key', 'attr', 'seq']))
+    print(','.join(['key', 'attr', 'seq', 'nsemi']))
     for chord_seq in chord_seqs:
         print(GetTupleCsv(chord_seq))
 
