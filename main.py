@@ -154,6 +154,12 @@ kProgInfo = [
             'seq': [('M2', 'm7'), ('P5', '7')],
             },
         {
+            'seq': [('union', 'ma7'), ('M6', 'm7'), ('M2', 'm7'), ('P5', '7')],
+            },
+        {
+            'seq': [('union', 'ma'), ('M6', 'm'), ('M2', 'm'), ('P5', 'ma')],
+            },
+        {
             'seq': [('M2', 'm7'), ('P5', '7')],
             },
         {
@@ -288,6 +294,9 @@ def GetColor(scale):
 def GetNsemi(seq):
     return sum([x in kSemi for x in seq])
 
+def MatchBluesHarp(seq):
+    return GetNsemi(seq) < 3
+
 def GetTupleCsv(t):
     return ','.join([str(x) for x in t])
 
@@ -357,11 +366,13 @@ def main():
     p.add_argument('--rnd', help='round', default=60, type=int) 
     p.add_argument('--len', help='note number', default=3, type=int) 
     p.add_argument('--interval', help='chromatic range', default=11, type=int) 
-    p.add_argument('--train', default='string', type=str, choices=['motive', 'blues_scale', 'blues_chord', 'blues_prog']) 
+    p.add_argument('--train', required=True, type=str, choices=['string', 'motive', 'blues_scale', 'blues_chord', 'blues_prog']) 
     args = p.parse_args() 
 
     if args.train == 'motive':
         return MotiveTrain(args)
+    elif args.train == 'string':
+        return StringTrain(args)
     elif args.train == 'blues_scale':
         return BluesHarpScale()
     elif args.train == 'blues_chord':
